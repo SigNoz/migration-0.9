@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	clickhouse "github.com/ClickHouse/clickhouse-go/v2"
@@ -98,7 +99,7 @@ func prepareTimeSeries(conn clickhouse.Conn) ([]TimeSeriesV2, error) {
 	fingerprintToName = make(map[uint64]string)
 	ctx := context.Background()
 	result := []TimeSeriesV2{}
-	query := fmt.Sprintf("SELECT JSONExtractString(labels, '__name__') as metric_name, fingerprint FROM %s", timeSeriesTable)
+	query := fmt.Sprintf("SELECT JSONExtractString(labels, '__name__') as metric_name, fingerprint, date, labels FROM %s", timeSeriesTable)
 	if err := conn.Select(ctx, &result, query); err != nil {
 		return nil, err
 	}
@@ -147,7 +148,12 @@ func writeSamples(conn clickhouse.Conn, batchSamples []SamplesV2) error {
 
 func writeTimeSeries(conn clickhouse.Conn, batchSeries []TimeSeriesV2) error {
 	ctx := context.Background()
-	statement, err := conn.PrepareBatch(ctx, fmt.Sprintf("INSERT INTO %s", timeSeriesTableV2))
+	err := conn.Exec(ctx, `SET allow_experimental_object_type = 1`)
+	if err != nil {
+		return err
+	}
+
+	statement, err := conn.PrepareBatch(ctx, fmt.Sprintf("INSERT INTO %s (metric_name, date, fingerprint, labels) VALUES (?, ?, ?, ?)", timeSeriesTableV2))
 	if err != nil {
 		return err
 	}
@@ -157,7 +163,6 @@ func writeTimeSeries(conn clickhouse.Conn, batchSeries []TimeSeriesV2) error {
 			series.Date,
 			series.Fingerprint,
 			series.Labels,
-			series.LabelsObject,
 		)
 		if err != nil {
 			return err
@@ -207,6 +212,7 @@ func main() {
 	passwordFlag := flag.String("password", "", "clickhouse password")
 	databaseFlag := flag.String("database", "signoz_metrics", "metrics database")
 	dropOldTable := flag.Bool("dropOldTable", false, "clear old clickhouse data if migration was successful")
+	dataSource := flag.String("dataSource", "signoz.db", "Data Source path")
 	flag.Parse()
 	fmt.Println(*hostFlag, *portFlag, *userNameFlag, *passwordFlag, *databaseFlag)
 
@@ -263,4 +269,19 @@ func main() {
 	if *dropOldTable {
 		dropOldTables(conn)
 	}
+
+	fmt.Println("Data Source path: ", *dataSource)
+
+	if _, err := os.Stat(*dataSource); os.IsNotExist(err) {
+		log.Fatalf("data source file does not exist: %s", *dataSource)
+	}
+
+	// inialize database
+	err = initDB(*dataSource)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// migrate dashboards
+	migrateDashboards()
 }
