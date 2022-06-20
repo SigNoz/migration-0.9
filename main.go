@@ -134,8 +134,8 @@ func writeSamples(conn clickhouse.Conn, batchSamples []SamplesV2) error {
 		}
 		err = statement.Append(
 			sample.MetricsName,
-			sample.TimeStamp,
 			sample.Fingerprint,
+			sample.TimeStamp,
 			sample.Value,
 		)
 		if err != nil {

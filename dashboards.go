@@ -102,6 +102,7 @@ type QueryBuilder struct {
 	MetricName        string      `json:"metricName"`
 	Name              string      `json:"name"`
 	TagFilters        TagFilters  `json:"tagFilters"`
+	ReduceTo          interface{} `json:"reduceTo"`
 }
 
 type MetricsBuilder struct {
@@ -151,7 +152,7 @@ func initDB(dataSourceName string) error {
 	return err
 }
 
-func alterData(data string) string {
+func migrateDData(data string) string {
 	var dd *DashboardData
 	var ddNew DashboardDataNew
 
@@ -177,7 +178,12 @@ func alterData(data string) string {
 			},
 			MetricsBuilder: []MetricsBuilder{
 				{Formulas: []string{}, QueryBuilder: []QueryBuilder{
-					{AggregateOperator: nil, Name: "A", TagFilters: TagFilters{OP: "AND", Items: []TagFilterItem{}}},
+					{
+						AggregateOperator: nil,
+						Name:              "A",
+						TagFilters:        TagFilters{OP: "AND", Items: []TagFilterItem{}},
+						ReduceTo:          nil,
+					},
 				}},
 			},
 			PromQL: []PromQueryNew{},
@@ -230,9 +236,9 @@ func migrateDashboards() {
 	}
 
 	for _, dashboard := range dashboards {
-		dashboard.Data = alterData(dashboard.Data)
+		dashboard.Data = migrateDData(dashboard.Data)
 
-		// updateData(dashboard.Id, dashboard.Data)
+		updateData(dashboard.Id, dashboard.Data)
 
 		log.Printf("Dashboard %s updated\n", dashboard.Uuid)
 	}
