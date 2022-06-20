@@ -30,7 +30,7 @@ type Samples struct {
 
 type TimeSeries struct {
 	MetricName  string    `ch:"metric_name"`
-	Date        time.Time `ch:"data"`
+	Date        time.Time `ch:"date"`
 	Fingerprint uint64    `ch:"fingerprint"`
 	Labels      string    `ch:"labels"`
 }

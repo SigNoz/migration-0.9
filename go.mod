@@ -1,4 +1,4 @@
-module go.signoz.io/migrate-0.8.2
+module go.signoz.io/migrate-0.9
 
 go 1.17
 
