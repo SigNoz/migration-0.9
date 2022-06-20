@@ -111,15 +111,24 @@ func prepareTimeSeries(conn clickhouse.Conn) ([]TimeSeriesV2, error) {
 
 func prepareSamples(conn clickhouse.Conn) ([]SamplesV2, error) {
 	ctx := context.Background()
-	result := []SamplesV2{}
+	result := []Samples{}
 	query := fmt.Sprintf("SELECT * FROM %s", samplesTable)
 	if err := conn.Select(ctx, &result, query); err != nil {
 		return nil, err
 	}
-	for _, item := range result {
-		item.MetricsName = fingerprintToName[item.Fingerprint]
+	newResult := []SamplesV2{}
+	for idx := range result {
+		item := result[idx]
+		name := fingerprintToName[item.Fingerprint]
+		newItem := SamplesV2{}
+
+		newItem.MetricsName = string([]byte(name))
+		newItem.Fingerprint = item.Fingerprint
+		newItem.TimeStamp = item.TimeStamp
+		newItem.Value = item.Value
+		newResult = append(newResult, newItem)
 	}
-	return result, nil
+	return newResult, nil
 }
 
 func writeSamples(conn clickhouse.Conn, batchSamples []SamplesV2) error {
