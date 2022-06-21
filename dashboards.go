@@ -121,6 +121,7 @@ type QueryNew struct {
 	ClickHouse     []ClickHouseQuery `json:"clickHouse"`
 	PromQL         []PromQueryNew    `json:"promQL"`
 	MetricsBuilder []MetricsBuilder  `json:"metricsBuilder"`
+	QueryType      int               `json:"queryType"`
 }
 
 type WidgetsNew struct {
@@ -135,6 +136,7 @@ type WidgetsNew struct {
 	TimePreferance string    `json:"timePreferance"`
 	Title          string    `json:"title"`
 	YAxisUnit      string    `json:"yAxisUnit"`
+	QueryType      int       `json:"queryType"`
 }
 
 type DashboardDataNew struct {
@@ -186,12 +188,14 @@ func migrateDData(data string) string {
 					},
 				}},
 			},
-			PromQL: []PromQueryNew{},
+			PromQL:    []PromQueryNew{},
+			QueryType: 3,
 		}
 		name := 65
 		for i, q := range widget.Query {
 			ddNew.Widgets[i].Query.PromQL = append(ddNew.Widgets[i].Query.PromQL, PromQueryNew{Query: q.Query, Legend: q.Legend, Name: fmt.Sprintf("%c", i+name)})
 		}
+		ddNew.Widgets[i].QueryType = 3
 		ddNew.Widgets[i].TimePreferance = widget.TimePreferance
 		ddNew.Widgets[i].Title = widget.Title
 		ddNew.Widgets[i].YAxisUnit = widget.YAxisUnit
