@@ -1,4 +1,9 @@
-FROM golang:1.17-buster AS builder
+FROM golang:1.17-alpine AS builder
+
+RUN apk --update add \
+    util-linux-dev \
+    build-base \
+    musl-dev
 
 ARG TARGETPLATFORM
 

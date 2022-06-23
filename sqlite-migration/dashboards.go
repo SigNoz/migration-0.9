@@ -192,8 +192,8 @@ func migrateDData(data string) string {
 			QueryType: 3,
 		}
 		name := 65
-		for i, q := range widget.Query {
-			ddNew.Widgets[i].Query.PromQL = append(ddNew.Widgets[i].Query.PromQL, PromQueryNew{Query: q.Query, Legend: q.Legend, Name: fmt.Sprintf("%c", i+name)})
+		for j, q := range widget.Query {
+			ddNew.Widgets[i].Query.PromQL = append(ddNew.Widgets[i].Query.PromQL, PromQueryNew{Query: q.Query, Legend: q.Legend, Name: fmt.Sprintf("%c", j+name)})
 		}
 		ddNew.Widgets[i].QueryType = 3
 		ddNew.Widgets[i].TimePreferance = widget.TimePreferance

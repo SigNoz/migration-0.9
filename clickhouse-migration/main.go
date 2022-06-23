@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	clickhouse "github.com/ClickHouse/clickhouse-go/v2"
@@ -221,7 +220,6 @@ func main() {
 	passwordFlag := flag.String("password", "", "clickhouse password")
 	databaseFlag := flag.String("database", "signoz_metrics", "metrics database")
 	dropOldTable := flag.Bool("dropOldTable", false, "clear old clickhouse data if migration was successful")
-	dataSource := flag.String("dataSource", "signoz.db", "Data Source path")
 	flag.Parse()
 	fmt.Println(*hostFlag, *portFlag, *userNameFlag, *passwordFlag, *databaseFlag)
 
@@ -279,18 +277,4 @@ func main() {
 		dropOldTables(conn)
 	}
 
-	fmt.Println("Data Source path: ", *dataSource)
-
-	if _, err := os.Stat(*dataSource); os.IsNotExist(err) {
-		log.Fatalf("data source file does not exist: %s", *dataSource)
-	}
-
-	// inialize database
-	err = initDB(*dataSource)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// migrate dashboards
-	migrateDashboards()
 }
