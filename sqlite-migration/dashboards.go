@@ -181,10 +181,10 @@ func migrateDData(data string) string {
 			MetricsBuilder: []MetricsBuilder{
 				{Formulas: []string{}, QueryBuilder: []QueryBuilder{
 					{
-						AggregateOperator: nil,
+						AggregateOperator: 1,
 						Name:              "A",
 						TagFilters:        TagFilters{OP: "AND", Items: []TagFilterItem{}},
-						ReduceTo:          nil,
+						ReduceTo:          1,
 					},
 				}},
 			},
