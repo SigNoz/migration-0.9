@@ -161,15 +161,15 @@ func writeTimeSeries(conn clickhouse.Conn, batchSeries []TimeSeriesV2) error {
 		return err
 	}
 
-	statement, err := conn.PrepareBatch(ctx, fmt.Sprintf("INSERT INTO %s (metric_name, date, fingerprint, labels) VALUES (?, ?, ?, ?)", timeSeriesTableV2))
+	statement, err := conn.PrepareBatch(ctx, fmt.Sprintf("INSERT INTO %s (metric_name, fingerprint, timestamp_ms, labels) VALUES (?, ?, ?, ?)", timeSeriesTableV2))
 	if err != nil {
 		return err
 	}
 	for _, series := range batchSeries {
 		err = statement.Append(
 			series.MetricName,
-			series.Date,
 			series.Fingerprint,
+			series.Date.UnixMilli(),
 			series.Labels,
 		)
 		if err != nil {
@@ -187,7 +187,7 @@ func moveTimeSeries(conn clickhouse.Conn) error {
 		INSERT INTO
 		%s
 		SELECT
-			JSONExtractString(labels, '__name__') as metric_name, date, fingerprint, labels, labels as labels_object
+			JSONExtractString(labels, '__name__') as metric_name, fingerprint, toInt64(toDateTime(date)) as timestamp_ms, labels, labels as labels_object
 		FROM %s
 	`, timeSeriesTableV2, timeSeriesTable)
 	if err := conn.Exec(ctx, query); err != nil {
