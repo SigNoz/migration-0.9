@@ -219,7 +219,7 @@ func main() {
 	userNameFlag := flag.String("userName", "default", "clickhouse username")
 	passwordFlag := flag.String("password", "", "clickhouse password")
 	databaseFlag := flag.String("database", "signoz_metrics", "metrics database")
-	dropOldTable := flag.Bool("dropOldTable", false, "clear old clickhouse data if migration was successful")
+	dropOldTable := flag.Bool("dropOldTable", true, "clear old clickhouse data if migration was successful")
 	flag.Parse()
 	fmt.Println(*hostFlag, *portFlag, *userNameFlag, *passwordFlag, *databaseFlag)
 
