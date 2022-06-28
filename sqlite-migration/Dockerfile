@@ -23,7 +23,7 @@ RUN go mod download -x
 
 # Add the sources and proceed with build
 ADD . .
-RUN go build -o ./bin/migrate
+RUN go build -o ./bin/migrate -a -ldflags "-linkmode external -extldflags '-static' -s -w" main.go
 RUN chmod +x ./bin/migrate
 
 
