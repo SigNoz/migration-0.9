@@ -154,13 +154,20 @@ func initDB(dataSourceName string) error {
 	return err
 }
 
-func migrateDData(data string) string {
+func migrateDData(data string) (string, bool) {
 	var dd *DashboardData
 	var ddNew DashboardDataNew
 
 	err := json.Unmarshal([]byte(data), &dd)
 	if err != nil {
-		log.Fatalln(err)
+		var tempDashboardData DashboardDataNew
+		newDashErr := json.Unmarshal([]byte(data), &tempDashboardData)
+		if newDashErr == nil {
+			log.Println("New dashboard data found, skipping")
+			return "", false
+		} else {
+			log.Fatalln(err)
+		}
 	}
 	ddNew.Layout = dd.Layout
 	ddNew.Title = dd.Title
@@ -206,7 +213,7 @@ func migrateDData(data string) string {
 		log.Fatalln(err)
 	}
 
-	return string(newData)
+	return string(newData), true
 }
 
 func updateData(id int, data string) {
@@ -240,8 +247,11 @@ func migrateDashboards() {
 	}
 
 	for _, dashboard := range dashboards {
-		dashboard.Data = migrateDData(dashboard.Data)
-
+		data, changed := migrateDData(dashboard.Data)
+		if !changed {
+			continue
+		}
+		dashboard.Data = data
 		updateData(dashboard.Id, dashboard.Data)
 
 		log.Printf("Dashboard %s updated\n", dashboard.Uuid)
