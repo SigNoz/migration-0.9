@@ -202,6 +202,9 @@ func migrateDData(data string) (string, bool) {
 		for j, q := range widget.Query {
 			ddNew.Widgets[i].Query.PromQL = append(ddNew.Widgets[i].Query.PromQL, PromQueryNew{Query: q.Query, Legend: q.Legend, Name: fmt.Sprintf("%c", j+name)})
 		}
+		ddNew.Widgets[i].QueryData = QueryData{Data: []Data{
+			{QueryData: make([]interface{}, 0)},
+		}}
 		ddNew.Widgets[i].QueryType = 3
 		ddNew.Widgets[i].TimePreferance = widget.TimePreferance
 		ddNew.Widgets[i].Title = widget.Title
