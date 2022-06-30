@@ -50,6 +50,13 @@ type QueryData struct {
 	Loading      bool   `json:"loading"`
 }
 
+type QueryDataNew struct {
+	Data         Data   `json:"data"`
+	Error        bool   `json:"error"`
+	ErrorMessage string `json:"errorMessage"`
+	Loading      bool   `json:"loading"`
+}
+
 type Widgets struct {
 	Description    string    `json:"description"`
 	ID             string    `json:"id"`
@@ -65,9 +72,12 @@ type Widgets struct {
 }
 
 type DashboardData struct {
-	Layout  []Layout  `json:"layout"`
-	Title   string    `json:"title"`
-	Widgets []Widgets `json:"widgets"`
+	Description string    `json:"description"`
+	Tags        []string  `json:"tags"`
+	Name        string    `json:"name"`
+	Layout      []Layout  `json:"layout"`
+	Title       string    `json:"title"`
+	Widgets     []Widgets `json:"widgets"`
 }
 
 type PromQuery struct {
@@ -120,29 +130,32 @@ type PromQueryNew struct {
 type QueryNew struct {
 	ClickHouse     []ClickHouseQuery `json:"clickHouse"`
 	PromQL         []PromQueryNew    `json:"promQL"`
-	MetricsBuilder []MetricsBuilder  `json:"metricsBuilder"`
+	MetricsBuilder MetricsBuilder    `json:"metricsBuilder"`
 	QueryType      int               `json:"queryType"`
 }
 
 type WidgetsNew struct {
-	Description    string    `json:"description"`
-	ID             string    `json:"id"`
-	IsStacked      bool      `json:"isStacked"`
-	NullZeroValues string    `json:"nullZeroValues"`
-	Opacity        string    `json:"opacity"`
-	PanelTypes     string    `json:"panelTypes"`
-	Query          QueryNew  `json:"query"`
-	QueryData      QueryData `json:"queryData"`
-	TimePreferance string    `json:"timePreferance"`
-	Title          string    `json:"title"`
-	YAxisUnit      string    `json:"yAxisUnit"`
-	QueryType      int       `json:"queryType"`
+	Description    string       `json:"description"`
+	ID             string       `json:"id"`
+	IsStacked      bool         `json:"isStacked"`
+	NullZeroValues string       `json:"nullZeroValues"`
+	Opacity        string       `json:"opacity"`
+	PanelTypes     string       `json:"panelTypes"`
+	Query          QueryNew     `json:"query"`
+	QueryData      QueryDataNew `json:"queryData"`
+	TimePreferance string       `json:"timePreferance"`
+	Title          string       `json:"title"`
+	YAxisUnit      string       `json:"yAxisUnit"`
+	QueryType      int          `json:"queryType"`
 }
 
 type DashboardDataNew struct {
-	Layout  []Layout     `json:"layout"`
-	Title   string       `json:"title"`
-	Widgets []WidgetsNew `json:"widgets"`
+	Description string       `json:"description"`
+	Tags        []string     `json:"tags"`
+	Name        string       `json:"name"`
+	Layout      []Layout     `json:"layout"`
+	Title       string       `json:"title"`
+	Widgets     []WidgetsNew `json:"widgets"`
 }
 
 // initDB initalize database
@@ -171,6 +184,9 @@ func migrateDData(data string) (string, bool) {
 	}
 	ddNew.Layout = dd.Layout
 	ddNew.Title = dd.Title
+	ddNew.Description = dd.Description
+	ddNew.Tags = dd.Tags
+	ddNew.Name = dd.Name
 
 	ddNew.Widgets = make([]WidgetsNew, len(dd.Widgets))
 
@@ -185,15 +201,16 @@ func migrateDData(data string) (string, bool) {
 			ClickHouse: []ClickHouseQuery{
 				{Name: "A"},
 			},
-			MetricsBuilder: []MetricsBuilder{
-				{Formulas: []string{}, QueryBuilder: []QueryBuilder{
+			MetricsBuilder: MetricsBuilder{
+				Formulas: []string{}, QueryBuilder: []QueryBuilder{
 					{
 						AggregateOperator: 1,
 						Name:              "A",
 						TagFilters:        TagFilters{OP: "AND", Items: []TagFilterItem{}},
 						ReduceTo:          1,
+						GroupBy:           []string{},
 					},
-				}},
+				},
 			},
 			PromQL:    []PromQueryNew{},
 			QueryType: 3,
@@ -202,8 +219,8 @@ func migrateDData(data string) (string, bool) {
 		for j, q := range widget.Query {
 			ddNew.Widgets[i].Query.PromQL = append(ddNew.Widgets[i].Query.PromQL, PromQueryNew{Query: q.Query, Legend: q.Legend, Name: fmt.Sprintf("%c", j+name)})
 		}
-		ddNew.Widgets[i].QueryData = QueryData{Data: []Data{
-			{QueryData: make([]interface{}, 0)},
+		ddNew.Widgets[i].QueryData = QueryDataNew{Data: Data{
+			QueryData: make([]interface{}, 0),
 		}}
 		ddNew.Widgets[i].QueryType = 3
 		ddNew.Widgets[i].TimePreferance = widget.TimePreferance
